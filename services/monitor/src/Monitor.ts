@@ -3,8 +3,12 @@ import assert from "assert";
 import { EventEmitter } from "stream";
 import { SourcifyChain } from "@ethereum-sourcify/lib-sourcify";
 import logger from "./logger";
-import { ChainMonitor } from "./ChainMonitor";
-import { KnownDecentralizedStorageFetchers, MonitorConfig } from "./types";
+import ChainMonitor from "./ChainMonitor";
+import {
+  KnownDecentralizedStorageFetchers,
+  MonitorConfig,
+  PassedMonitorConfig,
+} from "./types";
 import dotenv from "dotenv";
 import { FetchRequest } from "ethers";
 import defaultConfig from "./defaultConfig";
@@ -20,7 +24,7 @@ export default class Monitor extends EventEmitter {
     chainsToMonitor:
       | { chainId: number; rpc: string[]; name: string }[]
       | SourcifyChain[],
-    passedConfig?: MonitorConfig
+    passedConfig?: PassedMonitorConfig
   ) {
     super();
 
@@ -54,7 +58,7 @@ export default class Monitor extends EventEmitter {
       } else {
         return new SourcifyChain({
           chainId: chain.chainId,
-          rpc: authenticateRpcs(chain.rpc),
+          rpc: authenticateRpcs(chain.chainId, chain.rpc),
           name: chain.name,
           supported: true,
         });
@@ -62,7 +66,7 @@ export default class Monitor extends EventEmitter {
     });
 
     logger.info(
-      `Starting ${
+      `Creating ${
         sourcifyChains.length
       } chain monitors for chains: ${sourcifyChains
         .map((c) => c.chainId)
@@ -104,12 +108,17 @@ export default class Monitor extends EventEmitter {
    * Starts the monitor on all the designated chains.
    */
   start = async (): Promise<void> => {
+    logger.info(
+      `Starting Monitor for chains: ${this.chainMonitors
+        .map((cm) => cm.sourcifyChain.chainId)
+        .join(",")}`
+    );
     const promises: Promise<void>[] = [];
     for (const cm of this.chainMonitors) {
       promises.push(cm.start());
     }
     await Promise.all(promises);
-    console.log("All started");
+    logger.info("All ChainMonitors started");
   };
 
   /**
@@ -117,16 +126,39 @@ export default class Monitor extends EventEmitter {
    */
   stop = (): void => {
     this.chainMonitors.forEach((cm) => cm.stop());
+    logger.info("Monitor stopped");
   };
 }
 
-function authenticateRpcs(rpcs: string[]) {
+function authenticateRpcs(chainId: number, rpcs: string[]) {
   return rpcs.map((rpcUrl) => {
     if (rpcUrl.includes("{INFURA_API_KEY}") && process.env.INFURA_API_KEY) {
       return rpcUrl.replace("{INFURA_API_KEY}", process.env.INFURA_API_KEY);
     }
-    if (rpcUrl.includes("{ALCHEMY_API_KEY}") && process.env.ALCHEMY_API_KEY) {
-      return rpcUrl.replace("{ALCHEMY_API_KEY}", process.env.ALCHEMY_API_KEY);
+    if (rpcUrl.includes("{ALCHEMY_API_KEY}")) {
+      let alchemyApiKey;
+      switch (chainId) {
+        case 10 /** Optimism Mainnet */:
+        case 420 /** Optimism Goerli */:
+        case 69 /** Optimism Kovan */:
+          alchemyApiKey =
+            process.env["ALCHEMY_API_KEY_OPTIMISM"] ||
+            process.env["ALCHEMY_API_KEY"];
+          break;
+        case 42161 /** Arbitrum One Mainnet */:
+        case 421613 /** Arbitrum Goerli Testnet */:
+        case 421611 /** Arbitrum Rinkeby Testnet */:
+          alchemyApiKey =
+            process.env["ALCHEMY_API_KEY_ARBITRUM"] ||
+            process.env["ALCHEMY_API_KEY"];
+          break;
+        default:
+          alchemyApiKey = process.env["ALCHEMY_API_KEY"];
+          break;
+      }
+      if (alchemyApiKey) {
+        return rpcUrl.replace("{ALCHEMY_API_KEY}", alchemyApiKey);
+      }
     }
     if (rpcUrl.includes("ethpandaops.io")) {
       const ethersFetchReq = new FetchRequest(rpcUrl);
@@ -149,7 +181,11 @@ function deepMerge(obj1: any, obj2: any): any {
   const output = { ...obj1 };
   for (const [key, value] of Object.entries(obj2)) {
     if (value === Object(value) && !Array.isArray(value)) {
-      output[key] = deepMerge(obj1[key], value);
+      if (Object.prototype.hasOwnProperty.call(obj1, key)) {
+        output[key] = deepMerge(obj1[key], value);
+      } else {
+        output[key] = value;
+      }
     } else {
       output[key] = value;
     }

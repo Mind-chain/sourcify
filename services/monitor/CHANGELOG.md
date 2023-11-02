@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [sourcify-monitor@1.0.0] - 2023-10-03
+## [sourcify-monitor@1.1.2] - 2023-10-23
+
+- Handles Alchemy API keys for Optimism and Arbitrum
+
+## [sourcify-monitor@1.1.1] - 2023-10-19
+
+- Bump to sync the tags on master
+
+## [sourcify-monitor@1.1.0] - 2023-10-18
+
+- Add tests to sourcify-monitor
+- Enable passing parameters other than `lastBlock` to each `ChainMonitor`
+
+## [sourcify-monitor@1.0.0] - 2023-10-09
 
 No changes this release. This marks the start of the changelog for this module.
 

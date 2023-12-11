@@ -1,13 +1,13 @@
-import { etherscanAPIs } from "../../../../config";
 import { BadRequestError } from "../../../../common/errors";
 import {
   JsonInput,
   Metadata,
+  SourcifyChain,
   findContractPathFromContractName,
-  useCompiler,
 } from "@ethereum-sourcify/lib-sourcify";
 import { TooManyRequests } from "../../../../common/errors/TooManyRequests";
 import { BadGatewayError } from "../../../../common/errors/BadGatewayError";
+import { solc } from "../verification.common";
 
 export type EtherscanResult = {
   SourceCode: string;
@@ -73,20 +73,20 @@ export const getSolcJsonInputFromEtherscanResult = (
 };
 
 export const processRequestFromEtherscan = async (
-  chain: string,
+  sourcifyChain: SourcifyChain,
   address: string
 ): Promise<any> => {
-  if (Object.keys(etherscanAPIs).includes(chain) === false) {
+  if (!sourcifyChain.etherscanApi) {
     throw new BadRequestError(
-      `Requested chain ${chain} is not supported for importing from Etherscan`
+      `Requested chain ${sourcifyChain.chainId} is not supported for importing from Etherscan`
     );
   }
 
-  const url = `${etherscanAPIs[chain].apiURL}/api?module=contract&action=getsourcecode&address=${address}`;
-
+  const url = `${sourcifyChain.etherscanApi.apiURL}/api?module=contract&action=getsourcecode&address=${address}`;
+  const apiKey = process.env[sourcifyChain.etherscanApi.apiKeyEnvName || ""];
   let response;
   try {
-    response = await fetch(`${url}&apikey=${etherscanAPIs[chain].apiKey}`);
+    response = await fetch(`${url}&apikey=${apiKey || ""}`);
   } catch (e: any) {
     throw new BadGatewayError(
       `Request to ${url}&apiKey=XXX failed with code ${e.code}`
@@ -165,7 +165,7 @@ export const getMetadataFromCompiler = async (
   solcJsonInput: JsonInput,
   contractName: string
 ): Promise<Metadata> => {
-  const compilationResult = await useCompiler(compilerVersion, solcJsonInput);
+  const compilationResult = await solc.compile(compilerVersion, solcJsonInput);
 
   const contractPath = findContractPathFromContractName(
     compilationResult.contracts,

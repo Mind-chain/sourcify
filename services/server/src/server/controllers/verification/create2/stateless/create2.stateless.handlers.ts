@@ -2,6 +2,7 @@ import { Response } from "express";
 import { services } from "../../../../services/services";
 import {
   extractFilesFromJSON,
+  solc,
   stringifyInvalidAndMissing,
 } from "../../verification.common";
 import {
@@ -32,7 +33,7 @@ export async function verifyCreate2Handler(
 
   let checkedContracts: CheckedContract[];
   try {
-    checkedContracts = await checkFiles(inputFiles);
+    checkedContracts = await checkFiles(solc, inputFiles);
   } catch (error) {
     if (error instanceof Error) throw new BadRequestError(error.message);
     throw error;
@@ -58,7 +59,7 @@ export async function verifyCreate2Handler(
   );
 
   if (match.runtimeMatch || match.creationMatch) {
-    await services.repository.storeMatch(contract, match);
+    await services.storage.storeMatch(contract, match);
   }
 
   res.send({ result: [getResponseMatchFromMatch(match)] });

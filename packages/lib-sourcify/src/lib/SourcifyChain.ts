@@ -6,7 +6,11 @@ import {
   TransactionResponse,
   getAddress,
 } from 'ethers';
-import { Chain, SourcifyChainExtension } from './types';
+import {
+  Chain,
+  FetchContractCreationTxMethods,
+  SourcifyChainExtension,
+} from './types';
 import { logError, logInfo, logWarn } from './logger';
 
 const RPC_TIMEOUT = process.env.RPC_TIMEOUT
@@ -19,8 +23,11 @@ interface JsonRpcProviderWithUrl extends JsonRpcProvider {
 }
 
 // Need to define the rpc property explicitly as when a sourcifyChain is created with {...chain, sourcifyChainExtension}, Typescript throws with "Type '(string | FetchRequest)[]' is not assignable to type 'string[]'." For some reason the Chain.rpc is not getting overwritten by SourcifyChainExtension.rpc
+// Also omit the 'sourcifyName' as it is only needed to have the name in sourcify-chains.json but not when instantiating a SourcifyChain
 export type SourcifyChainInstance = Omit<Chain, 'rpc'> &
-  Omit<SourcifyChainExtension, 'rpc'> & { rpc: Array<string | FetchRequest> };
+  Omit<SourcifyChainExtension, 'rpc' | 'sourcifyName'> & {
+    rpc: Array<string | FetchRequest>;
+  };
 
 class CreatorTransactionMismatchError extends Error {
   constructor() {
@@ -34,10 +41,12 @@ export default class SourcifyChain {
   chainId: number;
   rpc: Array<string | FetchRequest>;
   supported: boolean;
-  contractFetchAddress?: string | undefined;
-  graphQLFetchAddress?: string | undefined;
-  txRegex?: string[] | undefined;
   providers: JsonRpcProviderWithUrl[];
+  fetchContractCreationTxUsing?: FetchContractCreationTxMethods;
+  etherscanApi?: {
+    apiURL: string;
+    apiKeyEnvName?: string;
+  };
 
   constructor(sourcifyChainObj: SourcifyChainInstance) {
     this.name = sourcifyChainObj.name;
@@ -45,10 +54,10 @@ export default class SourcifyChain {
     this.chainId = sourcifyChainObj.chainId;
     this.rpc = sourcifyChainObj.rpc;
     this.supported = sourcifyChainObj.supported;
-    this.contractFetchAddress = sourcifyChainObj.contractFetchAddress;
-    this.graphQLFetchAddress = sourcifyChainObj.graphQLFetchAddress;
-    this.txRegex = sourcifyChainObj.txRegex;
     this.providers = [];
+    this.fetchContractCreationTxUsing =
+      sourcifyChainObj.fetchContractCreationTxUsing;
+    this.etherscanApi = sourcifyChainObj.etherscanApi;
 
     if (!this.supported) return; // Don't create providers if chain is not supported
 

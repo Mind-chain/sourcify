@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "strict": true,
     "outDir": "dist",
+    "rootDir": "src",
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
@@ -13,7 +14,8 @@
     "paths": {
       "ethers": ["./node_modules/ethers"]
     },
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules/**"],
+  "exclude": ["node_modules/**"]
 }

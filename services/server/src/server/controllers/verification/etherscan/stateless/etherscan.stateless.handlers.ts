@@ -8,15 +8,18 @@ import {
 } from "../etherscan.common";
 import { checkSupportedChainId } from "../../../../../sourcify-chains";
 import { getResponseMatchFromMatch } from "../../../../common";
+import { createCheckedContract } from "../../verification.common";
+import { sourcifyChainsMap } from "../../../../../sourcify-chains";
 
 export async function verifyFromEtherscan(req: Request, res: Response) {
   checkSupportedChainId(req.body.chain);
 
   const chain = req.body.chain as string;
   const address = req.body.address;
+  const sourcifyChain = sourcifyChainsMap[chain];
 
   const { compilerVersion, solcJsonInput, contractName } =
-    await processRequestFromEtherscan(chain, address);
+    await processRequestFromEtherscan(sourcifyChain, address);
 
   const metadata = await getMetadataFromCompiler(
     compilerVersion,
@@ -25,7 +28,7 @@ export async function verifyFromEtherscan(req: Request, res: Response) {
   );
 
   const mappedSources = getMappedSourcesFromJsonInput(solcJsonInput);
-  const checkedContract = new CheckedContract(metadata, mappedSources);
+  const checkedContract = createCheckedContract(metadata, mappedSources);
 
   const match = await services.verification.verifyDeployed(
     checkedContract,
@@ -33,7 +36,7 @@ export async function verifyFromEtherscan(req: Request, res: Response) {
     address
   );
 
-  await services.repository.storeMatch(checkedContract, match);
+  await services.storage.storeMatch(checkedContract, match);
 
   res.send({ result: [getResponseMatchFromMatch(match)] });
 }

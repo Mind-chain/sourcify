@@ -1,10 +1,16 @@
 # Needs to be run from the project root context
-FROM node:18
-WORKDIR /home/app
+FROM node:18.18.2-bullseye-slim
+RUN mkdir -p /home/app/sourcify && chown -R node:node /home/app/sourcify
+USER node
 
-COPY *.json ./
-COPY packages ./packages
-COPY services/monitor ./services/monitor
+WORKDIR /home/app/sourcify
+
+LABEL org.opencontainers.image.source https://github.com/ethereum/sourcify
+LABEL org.opencontainers.image.licenses MIT
+
+COPY --chown=node:node *.json ./
+COPY --chown=node:node packages ./packages
+COPY --chown=node:node services/monitor ./services/monitor
 
 RUN npm install
 RUN npx lerna run build --scope sourcify-monitor
@@ -20,6 +26,6 @@ ARG NODE_ENV=production
 # Set environment variable
 ENV NODE_ENV=${NODE_ENV}
 
-WORKDIR /home/app/services/monitor
+WORKDIR /home/app/sourcify/services/monitor
 
 CMD ["npm", "start"]

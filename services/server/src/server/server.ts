@@ -3,7 +3,7 @@ import serveIndex from "serve-index";
 import cors from "cors";
 import routes from "./routes";
 import bodyParser from "body-parser";
-import config, { etherscanAPIs } from "../config";
+import config from "../config";
 import { SourcifyEventManager } from "../common/SourcifyEventManager/SourcifyEventManager";
 import "../common/SourcifyEventManager/listeners/logger";
 import genericErrorHandler from "./middlewares/GenericErrorHandler";
@@ -185,13 +185,13 @@ export class Server {
       next();
     });
 
-    /* if (
+    if (
       process.env.NODE_ENV === "production" &&
       (process.env.TAG === "latest" || process.env.TAG === "stable")
     ) {
       const limiter = rateLimit({
-        windowMs: 15 * 1000,
-        max: 3, // Requests per windowMs
+        windowMs: 2 * 1000,
+        max: 1, // Requests per windowMs
         standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
         legacyHeaders: false, // Disable the `X-RateLimit-*` headers
         message: {
@@ -204,12 +204,21 @@ export class Server {
           }
           return req.ip;
         },
+        skip: (req) => {
+          let ip;
+          if (req.headers["x-forwarded-for"]) {
+            ip = req.headers["x-forwarded-for"].toString();
+          } else {
+            ip = req.ip;
+          }
+          return ip?.startsWith("10.244.") || false;
+        },
       });
 
       this.app.all("/session/verify/*", limiter);
       this.app.all("/verify*", limiter);
-      this.app.all("/", limiter);
-    } */
+      this.app.post("/", limiter);
+    }
 
     // Session API endpoints require non "*" origins because of the session cookies
     const sessionPaths = [
@@ -245,7 +254,7 @@ export class Server {
     );
     this.app.get("/chains", (_req, res) => {
       const sourcifyChains = sourcifyChainsArray.map(
-        ({ rpc, name, title, chainId, supported }) => {
+        ({ rpc, name, title, chainId, supported, etherscanApi }) => {
           // Don't publish providers
           // Don't show Alchemy & Infura IDs
           rpc = rpc.map((url) => {
@@ -266,7 +275,7 @@ export class Server {
             chainId,
             rpc,
             supported,
-            etherscanAPI: etherscanAPIs[chainId]?.apiURL, // Needed in the UI
+            etherscanAPI: etherscanApi?.apiURL, // Needed in the UI
           };
         }
       );

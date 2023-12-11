@@ -55,8 +55,8 @@ describe("Test Supported Chains", function () {
     if (!anyTestsPass && newAddedChainIds.length) {
       throw new Error(
         "There needs to be at least one passing test. Did you forget to add a test for your new chain with the id(s) " +
-          newAddedChainIds.join(",") +
-          "?"
+        newAddedChainIds.join(",") +
+        "?"
       );
     }
   });
@@ -795,11 +795,20 @@ describe("Test Supported Chains", function () {
     "shared/1_Storage.metadata.json"
   );
 
-  // Stratos Testnet
+  // Stratos Testnet (Mesos)
   verifyContract(
-    "0x999986dE5D86Ae4bbd4b9AbFBD65352622D11326",
+    "0xA049F14E503A489E6f72603034CBe4d6835C8393",
     "2047",
     "Stratos Testnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  // Stratos Mainnet
+  verifyContract(
+    "0x9004804c4306d0eF7687Bce0C193A94C7593013F",
+    "2048",
+    "Stratos Mainnet",
     ["shared/1_Storage.sol"],
     "shared/1_Storage.metadata.json"
   );
@@ -945,6 +954,15 @@ describe("Test Supported Chains", function () {
     "0x090734f94FA67590702421A9B61892509b7CE80A",
     "7777777",
     "ZORA MAinnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  // ZORA Sepolia Testnet
+  verifyContract(
+    "0x9788C590bd201b80091Bca6A322BeB903b8190Dd",
+    "999999999",
+    "ZORA Sepolia Testnet",
     ["shared/1_Storage.sol"],
     "shared/1_Storage.metadata.json"
   );
@@ -1198,19 +1216,87 @@ describe("Test Supported Chains", function () {
   );
 
   verifyContract(
-      "0xbF33D2dA0F875D826ce1bA250F66b2785d48C113",
-      "11235",
-      "Haqq Mainnet",
-      ["shared/1_Storage.sol"],
-      "shared/1_Storage.metadata.json"
+    "0xbF33D2dA0F875D826ce1bA250F66b2785d48C113",
+    "11235",
+    "Haqq Mainnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
   );
 
   verifyContract(
-      "0xbF33D2dA0F875D826ce1bA250F66b2785d48C113",
-      "54211",
-      "Haqq Testnet",
-      ["shared/1_Storage.sol"],
-      "shared/1_Storage.metadata.json"
+    "0xbF33D2dA0F875D826ce1bA250F66b2785d48C113",
+    "54211",
+    "Haqq Testnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  verifyContract(
+    "0x612C7dE4039655B9C9aE9A9B41f3A22319F0dF65",
+    "1115",
+    "Core Blockchain Testnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  verifyContract(
+    "0xFe392C04b7879f28D9F966239F3e3646fe048863",
+    "30",
+    "Rootstock",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  verifyContract(
+    "0x10fB58BBd3c4F580aC4be0600221850FDF33BEdF",
+    "49797",
+    "Energi Testnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  verifyContract(
+    "0xA9CD2d159ca8ab30711e9d9331D5229476e8a2d5",
+    "39797",
+    "Energi Mainnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  // Mantle Mainnet
+  verifyContract(
+    "0x2977852235B0EcFa27D3Eb045898fFF3575b294B",
+    "5000",
+    "Mantle Mainnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  // Crossbell Mainnet
+  verifyContract(
+    "0xaa028312440DFd72A33053932150aE5e35017f6A",
+    "3737",
+    "Crossbell Mainnet",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
+  );
+
+  // Rikeza Network
+  verifyContract(
+    "0xa8c07c66d0458e8c6e442a8827f4bc3fad036407",
+    "1433",
+    "Rikeza Network",
+    ["1433/stg.sol"],
+    "1433/metadata.json"
+  );
+
+  // Zeniq Mainnet
+  verifyContract(
+    "0xCf16669c144989409D439262F2BfBFa31BD6cd2a",
+    "383414847825",
+    "Zeniq",
+    ["shared/1_Storage.sol"],
+    "shared/1_Storage.metadata.json"
   );
 
   // Finally check if all the "supported: true" chains have been tested
